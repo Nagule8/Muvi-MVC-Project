@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Muvi.Data;
 using Muvi.Data.Base;
 using Muvi.Data.Interfaces;
+using Muvi.Data.Static;
 using Muvi.Data.ViewModels;
 using Muvi.Models;
 using System;
@@ -13,6 +15,7 @@ using System.Threading.Tasks;
 
 namespace Muvi.Controllers
 {
+    [Authorize(Roles = UserRoles.Admin)]
     public class MoviesController : Controller
     {
         private readonly IMovieInterface _service;
@@ -21,6 +24,8 @@ namespace Muvi.Controllers
         {
             _service = service;
         }
+
+        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
             var allMovies = await _service.GetAll(includeProperties: "Cinema");
@@ -28,6 +33,7 @@ namespace Muvi.Controllers
         }
 
         //GET: movies/Details/1
+        [AllowAnonymous]
         public async Task<IActionResult> Details(int id)
         {
             var movieDetails = await _service.Get(id);
