@@ -1,4 +1,5 @@
-﻿using Muvi.Models;
+﻿using Muvi.Data.Cart;
+using Muvi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ namespace Muvi.Data.Interfaces
 {
     public interface IShoppingCartService
     {
-        //public ShoppingCart GetShoppingCart(IServiceProvider services);
+        public ShoppingCart GetShoppingCart(IServiceProvider services);
         public void AddItemToCart(Movie movie);
         public void RemoveItemFromCart(Movie movie);
         public List<ShoppingCartItem> GetShoppingCartItems();

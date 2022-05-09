@@ -36,7 +36,7 @@ namespace Muvi.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Details(int id)
         {
-            var movieDetails = await _service.Get(id);
+            var movieDetails = await _service.GetMovieById(id);
 
             if (movieDetails == null)
             {

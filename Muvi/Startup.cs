@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Muvi.Data;
+using Muvi.Data.Cart;
 using Muvi.Data.Interfaces;
 using Muvi.Data.Repositories;
 using Muvi.Models;
@@ -35,8 +36,10 @@ namespace Muvi
             services.AddScoped<IProducerInterface, ProducerService>();
             services.AddScoped<ICinemaInterface, CinemaService>();
             services.AddScoped<IMovieInterface, MovieService>();
+            services.AddScoped<IOrderService, OrderService>();
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddScoped(sc => ShoppingCart.GetShoppingCart(sc));
 
             //Authentication and Authorization
             services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<AppDbContext>();

@@ -49,7 +49,11 @@ namespace Muvi.Data.Repositories
 
         public async Task<Movie> GetMovieById(int id)
         {
-            var movieDetails = await _context.Movies.FirstOrDefaultAsync(n => n.Id == id);
+            var movieDetails = await _context.Movies
+                .Include(c => c.Cinema)
+                .Include(p => p.Producer)
+                .Include(am => am.Actor_Movies).ThenInclude(a => a.Actor)
+                .FirstOrDefaultAsync(n => n.Id == id);
 
             return movieDetails;
 
