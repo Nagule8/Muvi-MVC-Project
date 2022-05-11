@@ -1,5 +1,5 @@
 ﻿@using Muvi.Data.ViewModels;
-@model ShoppingCartVM;
+@model RazorPayOptionsVM;
 
 @{
     ViewData["Title"] = "Shopping Cart Summary";
@@ -57,10 +57,11 @@
 
         <div class="text-right">
             <div class="btn-group">
-                @*<a class="btn btn-outline-primary" asp-action="CompleteOrder">
-                        Complete order
-                    </a>*@
+                <a class="btn btn-outline-primary" asp-action="CompleteOrder">
+                    Complete order
+                </a>
                 <div id="paypal-btn"></div>
+                <button id="rzp-button1">Razor Pay</button>
                 <span style="padding:5px"></span>
                 <a class="btn btn-outline-success" asp-controller="Movies" asp-action="Index">
                     Add more items
@@ -70,7 +71,7 @@
 
     </div>
 </div>
-
+@*
     @section Scripts{
 
         <script src="https://www.paypalobjects.com/api/checkout.js"></script>
@@ -78,11 +79,13 @@
         <script>
             let _total = @Html.Raw(Model.ShoppingCartTotal);
             paypal.Button.render({
+
                 //Configure environment
                 env: 'sandbox',
                 client: {
                     sandbox: 'AcKRtgL4i68EZ2ZYuYUx3ilihAg2YhL5dtF_m19A8MjBWVOn6ewNS4M_uV8gA3xi98zTcUq38gUHbVFx'
                 },
+
                 //Customize button
                 locale: 'en_US',
                 style: {
@@ -91,17 +94,19 @@
                     shape: 'pill'
                 },
                 commit: true,
+
                 //Set up a payment
                 payment: function (data, actions) {
                     return actions.payment.create({
                         transactions: [{
                             amount: {
                                 total: _total,
-                                currency: 'USD'
+                                currency: 'INR'
                             }
                         }]
                     });
                 },
+
                 //Execute the payment
                 onAuthorize: function (data, actions) {
                     return actions.payment.execute().then(function () {
@@ -112,3 +117,46 @@
             }, '#paypal-btn')
         </script>
     }
+*@
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    var paymentNotes = @Html.Raw(Json.Serialize(Model.Notes));
+    var options = {
+        "key": "@Model.Key", // Enter the Key ID generated from the Dashboard
+        "amount": "@Model.ShoppingCartTotal", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+        "currency": "@Model.Currency",
+        "name": "@Model.Name",
+        "description": "@Model.Descripiton",
+        "image": "@Model.ImageLogoUrl",
+        "order_id": "@Model.OrderId", //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+        "handler": function (response) {
+            alert(response.razorpay_payment_id);
+            alert(response.razorpay_order_id);
+            alert(response.razorpay_signature)
+        },
+        "prefill": {
+            "name": "@Model.ProfileName",
+            "email": "np@example.com",
+            "contact": "9999999999"
+        },
+        "notes": paymentNotes,
+        "theme": {
+            "color": "#3399cc"
+        }
+    };
+    var rzp1 = new Razorpay(options);
+    rzp1.on('payment.failed', function (response) {
+        alert(response.error.code);
+        alert(response.error.description);
+        alert(response.error.source);
+        alert(response.error.step);
+        alert(response.error.reason);
+        alert(response.error.metadata.order_id);
+        alert(response.error.metadata.payment_id);
+    });
+    document.getElementById('rzp-button1').onclick = function (e) {
+        rzp1.open();
+        e.preventDefault();
+    }
+</script>

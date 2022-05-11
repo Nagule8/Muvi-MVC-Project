@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Muvi.Data.Cart;
 using Muvi.Data.Interfaces;
 using Muvi.Data.ViewModels;
+using Muvi.Models;
+using Razorpay.Api;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,11 +21,17 @@ namespace Muvi.Controllers
         private readonly IOrderService _orderService;
         private readonly ShoppingCart _shoppingCart;
 
-        public OrdersController(IMovieInterface movieservice, IOrderService orderService, ShoppingCart shoppingCart)
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public const string _key = "rzp_test_g2ipH0Ua8Lu36d";
+        public const string _secret = "fB1rv7rNpUP0pCOj9Ngk4IdK";
+
+        public OrdersController(IMovieInterface movieservice, IOrderService orderService, ShoppingCart shoppingCart, UserManager<ApplicationUser> userManager)
         {
             _movieservice = movieservice;
             _shoppingCart = shoppingCart;
             _orderService = orderService;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()
@@ -46,7 +55,26 @@ namespace Muvi.Controllers
                 ShoppingCartTotal = _shoppingCart.GetShoppingCatrTotal()
             };
 
-            return View(response);
+            var orderId = CreateOrder(response);
+
+            RazorPayOptionsVM razorPayOptions = new RazorPayOptionsVM()
+            {
+                Key = _key,
+                ShoppingCartTotal = response.ShoppingCartTotal,
+                ShoppingCart = response.ShoppingCart,
+                Currency = "INR",
+                Name = "Muvi",
+                Descripiton = "to understand payment gateway",
+                ImageLogoUrl = "",
+                OrderId = orderId,
+                ProfileName = _userManager.GetUserName(User),
+                Notes = new Dictionary<string, string>()
+                {
+                    { "note 1", "this is payment note" }, { "note 2", "here also, Payment notes" }
+                }
+            };
+
+            return View(razorPayOptions);
         }
 
         public async Task<IActionResult> AddItemToShoppingCart(int id)
@@ -82,7 +110,33 @@ namespace Muvi.Controllers
             await _orderService.StoreOrderSync(items, userId, userEmail);
             await _shoppingCart.ClearShoppingCart();
 
-            return View("Order Completed.");
+            return View("OrderCompleted");
+        }
+
+
+
+        //for razor payment
+        private string CreateOrder(ShoppingCartVM shoppingCartVM)
+        {
+            try
+            {
+                RazorpayClient client = new RazorpayClient(_key, _secret);
+
+                Dictionary<string, object> options = new Dictionary<string, object>();
+                options.Add("amount", shoppingCartVM.ShoppingCartTotal*100); // amount in the smallest currency unit
+                options.Add("currency", "INR");
+
+                Razorpay.Api.Order orderResponse = client.Order.Create(options);
+
+                var orderId = orderResponse.Attributes["id"].ToString();
+
+                return orderId;
+            }
+
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
     }

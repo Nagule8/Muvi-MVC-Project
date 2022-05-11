@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Muvi.Controllers
 {
@@ -23,6 +24,14 @@ namespace Muvi.Controllers
             _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
+        }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Users()
+        {
+            var res = await _context.Users.ToListAsync();
+
+            return View(res);
         }
 
         //Login
